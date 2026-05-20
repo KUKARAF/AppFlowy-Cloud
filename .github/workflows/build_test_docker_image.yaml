@@ -121,7 +121,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner | lower }}/appflowy-cloud:${{ github.event.inputs.debug_version }}
+            ghcr.io/kukaraf/appflowy-cloud:${{ github.event.inputs.debug_version }}
           provenance: false
           build-args: |
             PROFILE=release
@@ -204,7 +204,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner | lower }}/appflowy-cloud:worker-${{ github.event.inputs.debug_version }}
+            ghcr.io/kukaraf/appflowy-cloud:worker-${{ github.event.inputs.debug_version }}
           provenance: false
           build-args: |
             PROFILE=release
