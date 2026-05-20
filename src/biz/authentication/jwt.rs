@@ -1,7 +1,9 @@
 use actix_http::Payload;
 use actix_web::{web::Data, FromRequest, HttpRequest};
 
+use super::authentik_jwt::{AuthentikValidator};
 use gotrue_entity::gotrue_jwt::GoTrueJWTClaims;
+use jsonwebtoken::{Algorithm, decode_header};
 use secrecy::{ExposeSecret, Secret};
 use serde::{Deserialize, Serialize};
 use sqlx::types::{uuid, Uuid};
@@ -147,7 +149,31 @@ fn get_auth_from_request(req: &HttpRequest) -> Result<Authorization, actix_web::
       "Invalid Authorization header, missing Bearer",
     ))?;
 
-  authorization_from_token(token, jwt_secret_data)
+  // Try to detect JWT type by checking the header's algorithm
+  match detect_jwt_algorithm(token) {
+    Ok(Algorithm::RS256) => {
+      // Authentik uses RS256, get validator from app_data
+      if let Some(validator) = req.app_data::<Data<AuthentikValidator>>() {
+        authorization_from_authentik_token(token, validator)
+      } else {
+        // Fall back to GoTrue if validator not configured
+        authorization_from_token(token, jwt_secret_data)
+      }
+    },
+    Ok(Algorithm::HS256) | Err(_) => {
+      // GoTrue uses HS256, use symmetric key validation
+      authorization_from_token(token, jwt_secret_data)
+    },
+    _ => Err(actix_web::error::ErrorUnauthorized(
+      "Unsupported JWT algorithm",
+    )),
+  }
+}
+
+fn detect_jwt_algorithm(token: &str) -> Result<Algorithm, actix_web::Error> {
+  let header = decode_header(token)
+    .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid JWT header"))?;
+  Ok(header.alg)
 }
 
 #[instrument(level = "trace", skip_all, err)]
@@ -172,4 +198,38 @@ fn gotrue_jwt_claims_from_token(
       actix_web::error::ErrorUnauthorized(format!("fail to decode token, error:{}", err))
     })?;
   Ok(claims)
+}
+
+#[instrument(level = "trace", skip_all, err)]
+fn authorization_from_authentik_token(
+  token: &str,
+  validator: &Data<AuthentikValidator>,
+) -> Result<Authorization, actix_web::Error> {
+  let token_data = validator
+    .validate(token)
+    .map_err(|err| actix_web::error::ErrorUnauthorized(format!("Invalid Authentik token: {}", err)))?;
+
+  // Convert Authentik claims to a compatible format
+  // For now, we'll create a basic Authorization struct
+  // In a full implementation, we might want to extend this to include Authentik-specific claims
+  Ok(Authorization {
+    token: token.to_string(),
+    claims: GoTrueJWTClaims {
+      aud: token_data.claims.aud.clone(),
+      exp: Some(token_data.claims.exp),
+      jti: None,
+      iat: Some(token_data.claims.iat),
+      iss: Some(token_data.claims.iss.clone()),
+      nbf: None,
+      sub: Some(token_data.claims.sub.clone()),
+      email: token_data.claims.email.clone().unwrap_or_default(),
+      phone: String::new(),
+      app_metadata: serde_json::json!({}),
+      user_metadata: serde_json::json!({}),
+      role: String::new(),
+      aal: None,
+      amr: None,
+      session_id: None,
+    },
+  })
 }

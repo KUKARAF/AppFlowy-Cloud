@@ -77,6 +77,7 @@ use crate::mailer::AFCloudMailer;
 use crate::middleware::metrics_mw::MetricsMiddleware;
 use crate::middleware::request_id::RequestIdMiddleware;
 use crate::state::{AppMetrics, AppState, GoTrueAdmin, UserCache};
+use crate::biz::authentication::authentik_jwt::{AuthentikValidator, JWKSCache};
 
 pub struct Application {
   port: u16,
@@ -176,6 +177,12 @@ pub async fn run_actix_server(
       .app_data(Data::new(state.clone()))
       .app_data(Data::new(storage.clone()))
       .app_data(Data::new(state.published_collab_store.clone()))
+      .app_data(if let Some(ref validator) = state.authentik_validator {
+        Data::new(validator.clone())
+      } else {
+        // Create a dummy validator if not configured (will not be used)
+        Data::new(Arc::new(AuthentikValidator::new(Arc::new(JWKSCache::with_keys(vec![])))))
+      })
   });
 
   server = server.listen(listener)?;
@@ -231,6 +238,29 @@ pub async fn init_state(config: &Config) -> Result<AppState, Error> {
   info!("Connecting to GoTrue...");
   let gotrue_client = get_gotrue_client(&config.gotrue).await?;
   let gotrue_admin = get_admin_client(gotrue_client.clone(), &config.gotrue);
+
+  // Authentik (optional, initialized if configured)
+  let authentik_validator: Option<Arc<AuthentikValidator>> = {
+    // Check if this is an Authentik endpoint by looking for "authentik" in the URL
+    if config.gotrue.base_url.contains("authentik") {
+      info!("Initializing Authentik JWT validator...");
+      let jwks_url = format!("{}/jwks/", config.gotrue.base_url.trim_end_matches('/'));
+      match JWKSCache::fetch_from_url(&jwks_url).await {
+        Ok(keys) => {
+          info!("Successfully fetched {} JWKS keys from Authentik", keys.len());
+          let cache = Arc::new(JWKSCache::with_keys(keys));
+          let validator = Arc::new(AuthentikValidator::new(cache));
+          Some(validator)
+        },
+        Err(e) => {
+          error!("Failed to fetch Authentik JWKS: {}. Continuing without Authentik support.", e);
+          None
+        },
+      }
+    } else {
+      None
+    }
+  };
 
   // Redis
   info!("Connecting to Redis...");
@@ -393,6 +423,7 @@ pub async fn init_state(config: &Config) -> Result<AppState, Error> {
     ai_client: appflowy_ai_client,
     indexer_scheduler,
     ws_server,
+    authentik_validator,
   })
 }
 

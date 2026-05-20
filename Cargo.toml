@@ -116,6 +116,7 @@ database-entity.workspace = true
 gotrue = { path = "libs/gotrue" }
 gotrue-entity = { path = "libs/gotrue-entity" }
 infra = { path = "libs/infra" }
+jsonwebtoken = "8.3"
 access-control.workspace = true
 app-error = { workspace = true, features = [
   "sqlx_error",

@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 use access_control::metrics::AccessControlMetrics;
 use app_error::AppError;
+use crate::biz::authentication::authentik_jwt::AuthentikValidator;
 use appflowy_ai_client::client::AppFlowyAIClient;
 use appflowy_collaborate::collab::cache::CollabCache;
 use appflowy_collaborate::metrics::CollabMetrics;
@@ -61,6 +62,7 @@ pub struct AppState {
   pub ai_client: AppFlowyAIClient,
   pub indexer_scheduler: Arc<IndexerScheduler>,
   pub ws_server: Addr<WsServer>,
+  pub authentik_validator: Option<Arc<AuthentikValidator>>,
 }
 
 impl AppState {
