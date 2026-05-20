@@ -2,6 +2,10 @@ name: Manually Build Selected Docker Images
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
     inputs:
       branch:
         description: "Branch to build from"
