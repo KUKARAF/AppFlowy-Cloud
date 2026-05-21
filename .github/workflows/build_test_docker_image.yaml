@@ -126,6 +126,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/kukaraf/appflowy-cloud:${{ github.event.inputs.debug_version }}
+            ghcr.io/kukaraf/appflowy-cloud:latest
           provenance: false
           build-args: |
             PROFILE=release
@@ -209,6 +210,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/kukaraf/appflowy-cloud:worker-${{ github.event.inputs.debug_version }}
+            ghcr.io/kukaraf/appflowy-cloud:worker-latest
           provenance: false
           build-args: |
             PROFILE=release
