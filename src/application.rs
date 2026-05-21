@@ -168,6 +168,7 @@ pub async fn run_actix_server(
       .service(access_request_scope())
       .service(sharing_scope())
       .route("/health", web::get().to(health_check))
+      .route("/health", web::head().to(health_check))
       .app_data(Data::new(state.metrics.registry.clone()))
       .app_data(Data::new(state.metrics.request_metrics.clone()))
       .app_data(Data::new(state.metrics.realtime_metrics.clone()))
