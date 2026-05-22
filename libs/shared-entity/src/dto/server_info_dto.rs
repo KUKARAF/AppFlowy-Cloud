@@ -12,3 +12,11 @@ pub struct ServerInfoResponseItem {
   pub minimum_supported_client_version: Option<String>,
   pub appflowy_web_url: String,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuthProvidersResponseItem {
+  pub count: usize,
+  pub providers: Vec<String>,
+  pub signup_disabled: bool,
+  pub mailer_autoconfirm: bool,
+}
