@@ -34,11 +34,11 @@ use tokio::sync::RwLock;
 use tracing::{error, info};
 
 use appflowy_ai_client::client::AppFlowyAIClient;
-use appflowy_collaborate::actix_ws::server::RealtimeServerActor;
+use appflowy_collaborate::CollaborationServer;
 use appflowy_collaborate::collab::cache::CollabCache;
 use appflowy_collaborate::collab::collab_store::CollabStoreImpl;
 use appflowy_collaborate::ws2::{CollabManager, WsServer};
-use appflowy_collaborate::CollaborationServer;
+use appflowy_collaborate::config::GoTrueSetting;
 use collab_stream::awareness_gossip::AwarenessGossip;
 use collab_stream::metrics::CollabStreamMetrics;
 use collab_stream::stream_router::{StreamRouter, StreamRouterOptions};
@@ -73,10 +73,10 @@ use crate::biz::workspace::publish::{
 use crate::config::config::{
   AppAuthentikSetting, Config, DatabaseSetting, PublishedCollabStorageBackend, S3Setting,
 };
-use crate::mailer::AFCloudMailer;
+use crate::state::{AppMetrics, AppState, GoTrueAdmin, UserCache};
 use crate::middleware::metrics_mw::MetricsMiddleware;
 use crate::middleware::request_id::RequestIdMiddleware;
-use crate::state::{AppMetrics, AppState, UserCache};
+use crate::state::{AppMetrics, AppState, UserCache, GoTrueAdmin};
 use crate::biz::authentication::authentik_jwt::{AuthentikValidator, JWKSCache};
 
 pub struct Application {
