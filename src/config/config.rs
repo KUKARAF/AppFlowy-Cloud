@@ -16,7 +16,7 @@ pub struct Config {
   pub app_env: Environment,
   pub access_control: AccessControlSetting,
   pub db_settings: DatabaseSetting,
-  pub gotrue: GoTrueSetting,
+  pub authentik: AppAuthentikSetting,
   pub application: ApplicationSetting,
   pub websocket: WebsocketSetting,
   pub redis_uri: Secret<String>,
@@ -66,10 +66,11 @@ pub struct S3Setting {
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
-pub struct GoTrueSetting {
+pub struct AppAuthentikSetting {
   pub base_url: String,
   pub jwt_secret: Secret<String>,
   pub service_role: String,
+  pub enabled: bool,
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
@@ -208,10 +209,13 @@ pub fn get_configuration() -> Result<Config, anyhow::Error> {
         .parse()
         .context("fail to get APPFLOWY_DATABASE_MAX_CONNECTIONS")?,
     },
-    gotrue: GoTrueSetting {
-      base_url: get_env_var("APPFLOWY_GOTRUE_BASE_URL", "http://localhost:9999"),
-      jwt_secret: get_env_var("APPFLOWY_GOTRUE_JWT_SECRET", "hello456").into(),
-      service_role: get_env_var("APPFLOWY_GOTRUE_SERVICE_ROLE", "service_role"),
+    authentik: AppAuthentikSetting {
+      base_url: get_env_var("APPFLOWY_AUTHENTIK_BASE_URL", "http://localhost:9000"),
+      jwt_secret: get_env_var("APPFLOWY_AUTHENTIK_JWT_SECRET", "hello456").into(),
+      service_role: get_env_var("APPFLOWY_AUTHENTIK_SERVICE_ROLE", "service_role"),
+      enabled: get_env_var("APPFLOWY_AUTHENTIK_ENABLED", "false")
+        .parse()
+        .context("fail to get APPFLOWY_AUTHENTIK_ENABLED")?,
     },
     application: ApplicationSetting {
       port: get_env_var("APPFLOWY_APPLICATION_PORT", "8000").parse()?,
