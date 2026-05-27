@@ -31,11 +31,7 @@ async fn server_info_handler(
 async fn auth_providers_handler(
   state: Data<AppState>,
 ) -> actix_web::Result<JsonAppResponse<AuthProvidersResponseItem>> {
-  let providers = if state.authentik_validator.is_some() {
-    vec!["authentik".to_string()]
-  } else {
-    vec!["password".to_string()]
-  };
+  let providers = vec!["authentik".to_string()];
 
   Ok(
     AppResponse::Ok()
