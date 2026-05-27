@@ -124,6 +124,8 @@ impl DatabaseSetting {
 #[derive(Clone, Debug, Deserialize)]
 pub struct GoTrueSetting {
   pub jwt_secret: Secret<String>,
+  pub base_url: String,
+  pub service_role: String,
 }
 
 #[derive(Clone, Debug)]
@@ -195,6 +197,8 @@ pub fn get_configuration() -> Result<Config, anyhow::Error> {
     },
     gotrue: GoTrueSetting {
       jwt_secret: get_env_var("APPFLOWY_GOTRUE_JWT_SECRET", "hello456").into(),
+      base_url: get_env_var("APPFLOWY_GOTRUE_BASE_URL", "http://gotrue:9999"),
+      service_role: get_env_var("APPFLOWY_AUTHENTIK_SERVICE_ROLE", "service_role"),
     },
     collab: CollabSetting {
       group_persistence_interval_secs: get_env_var(

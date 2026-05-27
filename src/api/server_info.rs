@@ -29,7 +29,7 @@ async fn server_info_handler(
 }
 
 async fn auth_providers_handler(
-  state: Data<AppState>,
+  _state: Data<AppState>,
 ) -> actix_web::Result<JsonAppResponse<AuthProvidersResponseItem>> {
   let providers = vec!["authentik".to_string()];
 

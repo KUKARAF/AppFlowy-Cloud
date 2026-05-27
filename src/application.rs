@@ -76,7 +76,6 @@ use crate::config::config::{
 use crate::state::{AppMetrics, AppState, GoTrueAdmin, UserCache};
 use crate::middleware::metrics_mw::MetricsMiddleware;
 use crate::middleware::request_id::RequestIdMiddleware;
-use crate::state::{AppMetrics, AppState, UserCache, GoTrueAdmin};
 use crate::biz::authentication::authentik_jwt::{AuthentikValidator, JWKSCache};
 
 pub struct Application {
